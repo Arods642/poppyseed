@@ -1,12 +1,11 @@
 $(function() {
-    let tax_rate = .25;
-    let subtotal = 0;
-    let total = 0;
+    let TAX_RATE = 0;
 
     $( document ).ready(function() {
         fetchLocationBasedData();
-
+        debugger;
         fetchCartData();
+        debugger;
     })
 
     // CREATE/POST
@@ -55,11 +54,7 @@ $(function() {
         // setting up the div tag to be appended.
         const div = document.getElementById('location');
 
-        // reseting the real tax rate to be multiplied by product cost later. 
-        let tax_rate = res.tax_rate;
-
-        // print the object out to the screen.
-        console.log(res)
+        TAX_RATE = res.tax_rate;
 
         // setting the div tag to be written to on the other page..
         div.innerHTML +='\
@@ -69,7 +64,7 @@ $(function() {
             </div>\
             <div class="col-md-3 mb-3">\
                 <label for="taxRate">Tax Rate</label>\
-                <input type="text" class="form-control" id="taxRate" value="' + tax_rate + '" required>\
+                <input type="text" class="form-control" id="taxRate" value="' + TAX_RATE + '" required>\
                 <div class="invalid-feedback">\
                     Zip code required.\
                 </div>\
@@ -143,7 +138,7 @@ $(function() {
     // Calculate: Subtotal, SalesTax, and Total figures
     function handleOnSuccessFetchCartData(res) {
         // setting up the ul list to be written to by setting it to ullist variable. 
-        const ullist = $('ul');
+        const ullist = $('#cart-items');
 
         ullist.html('');
 
@@ -191,7 +186,7 @@ $(function() {
     }
 
     const calculateLineTax = (product) => {
-        return calculateLineTotal(product) * tax_rate;
+        return calculateLineTotal(product) * TAX_RATE;
     }
     
 });
