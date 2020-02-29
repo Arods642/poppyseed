@@ -1,89 +1,12 @@
 $(function() {
-    // GET/READ
+    
     $( document ).ready(function() {
         // Set the tax rate variable for later use.
         let tax_rate;
-        // call to location end point. I had to use a proxy to get to the endpoint. 
-        $.ajax({
-            url: "https://cors-anywhere.herokuapp.com/https://poppyseed.yokepayments.com/location",
-            type: 'GET',
-            headers: {
-                    "CLIENT-TYPE": "POPPYSEED",
-                    "CLIENT-VERSION": "1.0.0",
-                    "ACCEPT": "application/json"
-                    },
-            dataType: 'json',
-            success: function(response) {
-                // setting up the div tag to be appended.
-                const div = document.getElementById('location');
-                // reseting the real tax rate to be multiplied by product cost later. 
-                let tax_rate = response.tax_rate;
-                // print the object out to the screen.
-                console.log(response)
-                // setting the div tag to be written to on the other page..
-                div.innerHTML +='\
-                <div class="col-md-6 mb-3">\
-                <label for="locationName">Location Name</label>]\
-                <input type="text" class="form-control" id="locationName" placeholder="" value="' + response.location_name + '" required>\
-            </div>\
-            <div class="col-md-3 mb-3">\
-                  <label for="taxRate">Tax Rate</label>\
-                  <input type="text" class="form-control" id="taxRate" value="' + tax_rate + '" required>\
-                  <div class="invalid-feedback">\
-                    Zip code required.\
-                  </div>\
-            </div>\
-            <div class="col-md-6 mb-3">\
-                <label for="address">Address</label>\
-                <input type="text" class="form-control" id="address" value="' + response.address + '" required>\
-                <div class="invalid-feedback">\
-                  Please enter your shipping address.\
-                </div>\
-            </div>\
-            \
-            <div class="row">\
-                <div class="col-md-4 mb-3">\
-                <label for="country">Country</label>\
-                <select class="custom-select d-block w-100" id="country" required>\
-                    <option value="">Choose...</option>\
-                    <option selected>United States</option>\
-                </select>\
-                <div class="invalid-feedback">\
-                    Please select a valid country.\
-                </div>\
-            </div>\
-            <div class="col-md-4 mb-3">\
-                <label for="state">State</label>\
-                <select class="custom-select d-block w-100" id="state" required>\
-                    <option value="">Choose...</option>\
-                    <option selected>California</option>\
-                </select>\
-                <div class="invalid-feedback">\
-                    Please provide a valid state.\
-                </div>\
-            </div>\
-           <div class="col-md-4 mb-3">\
-                <label for="zip">Zip</label>\
-                <input type="text" class="form-control" id="zip" placeholder="" required>\
-                <div class="invalid-feedback">\
-                    Zip code required.\
-                </div>\
-            </div>\
-            </div>\
-            <hr class="mb-4">\
-            <div class="custom-control custom-checkbox">\
-                <input type="checkbox" class="custom-control-input" id="same-address">\
-                <label class="custom-control-label" for="same-address">Shipping address is the same as my billing address</label>\
-            </div>\
-            <div class="custom-control custom-checkbox">\
-                <input type="checkbox" class="custom-control-input" id="save-info">\
-                <label class="custom-control-label" for="save-info">Save this information for next time</label>\
-            </div>\
-                     '; 
-            }
-        });
-       console.log(tax_rate);
-       // call to cart end point. I had to use a proxy to get to the endpoint
+
+        fetchLocationBasedData();
+
+        // call to cart end point. I had to use a proxy to get to the endpoint
         $.ajax({
             url: "https://cors-anywhere.herokuapp.com/https://poppyseed.yokepayments.com/cart",
             type: 'GET',
@@ -152,6 +75,91 @@ $(function() {
         });
     });
 
+    // call to location end point. I had to use a proxy to get to the endpoint. 
+    function fetchLocationBasedData() {
+        $.ajax({
+            url: "https://cors-anywhere.herokuapp.com/https://poppyseed.yokepayments.com/location",
+            type: 'GET',
+            headers: {
+                    "CLIENT-TYPE": "POPPYSEED",
+                    "CLIENT-VERSION": "1.0.0",
+                    "ACCEPT": "application/json"
+                    },
+            dataType: 'json',
+            success: handleFetchLocationBasedData
+        });
+    }
 
+    function handleFetchLocationBasedData(res) {
+        // setting up the div tag to be appended.
+        const div = document.getElementById('location');
+
+        // reseting the real tax rate to be multiplied by product cost later. 
+        let tax_rate = res.tax_rate;
+
+        // print the object out to the screen.
+        console.log(res)
+
+        // setting the div tag to be written to on the other page..
+        div.innerHTML +='\
+            <div class="col-md-6 mb-3">\
+                <label for="locationName">Location Name</label>]\
+                <input type="text" class="form-control" id="locationName" placeholder="" value="' + res.location_name + '" required>\
+            </div>\
+            <div class="col-md-3 mb-3">\
+                <label for="taxRate">Tax Rate</label>\
+                <input type="text" class="form-control" id="taxRate" value="' + tax_rate + '" required>\
+                <div class="invalid-feedback">\
+                    Zip code required.\
+                </div>\
+            </div>\
+            <div class="col-md-6 mb-3">\
+                <label for="address">Address</label>\
+                <input type="text" class="form-control" id="address" value="' + res.address + '" required>\
+                <div class="invalid-feedback">\
+                Please enter your shipping address.\
+                </div>\
+            </div>\
+            \
+            <div class="row">\
+                <div class="col-md-4 mb-3">\
+                <label for="country">Country</label>\
+                <select class="custom-select d-block w-100" id="country" required>\
+                    <option value="">Choose...</option>\
+                    <option selected>United States</option>\
+                </select>\
+                <div class="invalid-feedback">\
+                    Please select a valid country.\
+                </div>\
+            </div>\
+            <div class="col-md-4 mb-3">\
+                <label for="state">State</label>\
+                <select class="custom-select d-block w-100" id="state" required>\
+                    <option value="">Choose...</option>\
+                    <option selected>California</option>\
+                </select>\
+                <div class="invalid-feedback">\
+                    Please provide a valid state.\
+                </div>\
+            </div>\
+            <div class="col-md-4 mb-3">\
+                <label for="zip">Zip</label>\
+                <input type="text" class="form-control" id="zip" placeholder="" required>\
+                <div class="invalid-feedback">\
+                    Zip code required.\
+                </div>\
+            </div>\
+            </div>\
+            <hr class="mb-4">\
+            <div class="custom-control custom-checkbox">\
+                <input type="checkbox" class="custom-control-input" id="same-address">\
+                <label class="custom-control-label" for="same-address">Shipping address is the same as my billing address</label>\
+            </div>\
+            <div class="custom-control custom-checkbox">\
+                <input type="checkbox" class="custom-control-input" id="save-info">\
+                <label class="custom-control-label" for="save-info">Save this information for next time</label>\
+            </div>\
+        '; 
+    }
 
 });
