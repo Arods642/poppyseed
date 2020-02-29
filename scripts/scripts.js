@@ -1,32 +1,14 @@
 $(function() {
     let TAX_RATE = 0;
+    let TOTAL = 0;
 
     $( document ).ready(function() {
-        fetchLocationBasedData();
-        debugger;
-        fetchCartData();
-        debugger;
+        fetchLocationBasedData()
+            .then(() => fetchCartData());
     })
 
     // CREATE/POST
-    $('#get-button').on('click', function(event) {
-        
-        event.preventDefault();
-
-        $.ajax({
-            url: 'process.json',
-            dataType: 'json',
-            success: function(response) {
-                console.log(response);
-                if(response.status === 'FAILED') {
-                    console.log('FAILED');
-                } else if (response.status === 'PASSED'){
-                    console.log('PASSED');
-                }
-               
-            }
-        });
-    });
+    $('#get-button').on('click', postProcessOrder);
 
     /**API Calls
      * Had to use a proxy to access endpoints ()
@@ -39,8 +21,50 @@ $(function() {
         "ACCEPT": "application/json"
     };
 
+    function postProcessOrder(e) {
+        e.preventDefault();
+
+        const data = {
+            amount: TOTAL
+        }
+
+        debugger;
+
+        return $.ajax({
+            url: `${API_URL}/process`,
+            type: 'POST',
+            data: "{'amount': 202}",
+            // data: JSON.stringify(data),
+            headers: HEADERS,
+            dataType: 'json',
+            success: handleOnSuccessPostProcessOrder,
+            error: handleOnErrorPostProcessOrder
+        });
+    }
+
+    function handleOnSuccessPostProcessOrder(res) {
+        // Wrote if statement to handle both the "success" & "failure" paths
+        // to show that there is probably going to be separate handling.  It is just this situation
+        // where they happen to do the same thing
+        let msg;
+        
+        if (res.success) {
+            msg = `${res.status} - ${res.message}`;
+        } else {
+            msg = `${res.status} - ${res.message}`;
+        }
+        
+        genericErrorHandler(msg);
+    }
+
+    function handleOnErrorPostProcessOrder(err) {
+        const msg = err.message || 'Something went wrong in the request';
+        genericErrorHandler(msg);
+    }
+
+
     function fetchLocationBasedData() {
-        $.ajax({
+        return $.ajax({
             url: `${API_URL}/location`,
             type: 'GET',
             headers: HEADERS,
@@ -124,14 +148,14 @@ $(function() {
     }
 
     function fetchCartData() {
-        $.ajax({
+        return $.ajax({
             url: `${API_URL}/cart`,
             type: 'GET',
             headers: HEADERS,
             dataType: 'json',
             success: handleOnSuccessFetchCartData,
             error: handleOnErrorfetchCartData
-        });
+        })
     }
 
     // Post items to DOM
@@ -145,7 +169,7 @@ $(function() {
         let subtotal = 0;
         let totalTax = 0;
 
-        // Normally we would separate all the calculations into its own call
+        // Normally we would separate all the calculations into their own call
         // but we would be traversing the array several times
         res.forEach(function(product) {
             ullist.append('\
@@ -166,8 +190,11 @@ $(function() {
         });
 
         // Post calculations to DOM
-        console.log('subtotal ', subtotal);
-        console.log('totalTax', totalTax);
+        $('#subtotalAmount').text(formatCurrency(subtotal, 0, 'USD'));
+        $('#taxAmount').text(formatCurrency(totalTax, 0, 'USD'));
+        TOTAL = formatCurrency(subtotal + totalTax, 0, 'USD');
+        $('#totalAmount').text(TOTAL);
+
     }
 
     function handleOnErrorfetchCartData(err) {
@@ -175,7 +202,10 @@ $(function() {
         genericErrorHandler(msg);
     }
 
-    genericErrorHandler = errorMsg => console.log(errorMsg);
+    genericErrorHandler = errorMsg => {
+        console.log(errorMsg);
+        openModal(errorMsg);
+    }
 
     /**Financial calculations
      * Rounding is only applied when we finally post to DOM for accuracy
@@ -189,4 +219,37 @@ $(function() {
         return calculateLineTotal(product) * TAX_RATE;
     }
     
+    // Applies rounding and decimal conversions
+    // currencyFormat (string) [USD, Yen]
+    const formatCurrency = (amount, decimalPlaces = 0, currencyFormat = 'USD')  => {
+        let x = Math.ceil(amount);
+        return Math.ceil(amount);
+    }
+
+    /**Modal for user messages
+     * https://www.w3schools.com/howto/howto_css_modals.asp
+     */
+
+    const $modal = document.getElementById("myModal");
+    // Get the <span> element that closes the modal
+    const $closeModal = document.getElementsByClassName("close")[0];
+
+    // When the user clicks on the button, open the modal
+    const openModal = (msg) => {
+        $("#modalText").text(msg);
+        $modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    $closeModal.onclick = function() {
+        $modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == $modal) {
+            $modal.style.display = "none";
+        }
+    }
+
 });
