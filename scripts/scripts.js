@@ -1,57 +1,13 @@
 $(function() {
-    const tax_rate = 0;
-    const subtotal = 0;
-    const total = 0;
+    let tax_rate = .25;
+    let subtotal = 0;
+    let total = 0;
 
     $( document ).ready(function() {
         fetchLocationBasedData();
 
-        // call to cart end point. I had to use a proxy to get to the endpoint
-        $.ajax({
-            url: "https://cors-anywhere.herokuapp.com/https://poppyseed.yokepayments.com/cart",
-            type: 'GET',
-            headers: {
-                    "CLIENT-TYPE": "POPPYSEED",
-                    "CLIENT-VERSION": "1.0.0",
-                    "ACCEPT": "application/json"
-                    },
-            success: function(response) {
-               // setting up the ul list to be written to by setting it to ullist variable. 
-                const ullist = $('ul');
-                // tax rate is setup.
-                let taxrate = tax_rate;
-                ullist.html('');
-                // print the object out to the screen.
-                console.log(response)
-                // lets loop through the products 
-                response.forEach(function(product) {
-          
-                    // print the total of product price   
-                    
-                    ullist.append('\
-                    <li class="list-group-item d-flex justify-content-between lh-condensed">\
-                        <div>\
-                          <h6 class="my-0">' + product.name + '</h6>\
-                          <span class="text-dark">Quantity</span>\
-                          <span class="text-dark">( ' + product.quantity + ' )</span>\
-                        </div>\
-                        <span class="text-muted">' + parseFloat(product.price) + '</span>\
-                      </li>\
-                    ');
-
-            });
- 
-            let total = 0;
-            for (let i in response){
-               total += parseFloat(response[i].price);
-               taxrate = 0.0075;
-               totaltaxrate = total * taxrate;
-          };
-         console.log(totaltaxrate);
-            }
-        });
-
-    });
+        fetchCartData();
+    })
 
     // CREATE/POST
     $('#get-button').on('click', function(event) {
@@ -73,8 +29,6 @@ $(function() {
         });
     });
 
-    genericErrorHandler = errorMsg => console.log(errorMsg);
-
     /**API Calls
      * Had to use a proxy to access endpoints ()
      * https://cors-anywhere.herokuapp.com/
@@ -84,7 +38,7 @@ $(function() {
         "CLIENT-TYPE": "POPPYSEED",
         "CLIENT-VERSION": "1.0.0",
         "ACCEPT": "application/json"
-        };
+    };
 
     function fetchLocationBasedData() {
         $.ajax({
@@ -174,4 +128,70 @@ $(function() {
         genericErrorHandler(msg);
     }
 
+    function fetchCartData() {
+        $.ajax({
+            url: `${API_URL}/cart`,
+            type: 'GET',
+            headers: HEADERS,
+            dataType: 'json',
+            success: handleOnSuccessFetchCartData,
+            error: handleOnErrorfetchCartData
+        });
+    }
+
+    // Post items to DOM
+    // Calculate: Subtotal, SalesTax, and Total figures
+    function handleOnSuccessFetchCartData(res) {
+        // setting up the ul list to be written to by setting it to ullist variable. 
+        const ullist = $('ul');
+
+        ullist.html('');
+
+        let subtotal = 0;
+        let totalTax = 0;
+
+        // Normally we would separate all the calculations into its own call
+        // but we would be traversing the array several times
+        res.forEach(function(product) {
+            ullist.append('\
+            <li class="list-group-item d-flex justify-content-between lh-condensed">\
+                <div>\
+                    <h6 class="my-0">' + product.name + '</h6>\
+                    <span class="text-dark">Quantity</span>\
+                    <span class="text-dark">( ' + product.quantity + ' )</span>\
+                </div>\
+                <span class="text-muted">' + parseFloat(product.price) + '</span>\
+                </li>\
+            ');
+
+            subtotal = subtotal + calculateLineTotal(product);
+            
+            totalTax = totalTax + calculateLineTax(product);
+
+        });
+
+        // Post calculations to DOM
+        console.log('subtotal ', subtotal);
+        console.log('totalTax', totalTax);
+    }
+
+    function handleOnErrorfetchCartData(err) {
+        const msg = 'There was an error fetching cart items!';
+        genericErrorHandler(msg);
+    }
+
+    genericErrorHandler = errorMsg => console.log(errorMsg);
+
+    /**Financial calculations
+     * Rounding is only applied when we finally post to DOM for accuracy
+     */
+
+    const calculateLineTotal = (product) => {
+        return product.price * product.quantity;
+    }
+
+    const calculateLineTax = (product) => {
+        return calculateLineTotal(product) * tax_rate;
+    }
+    
 });
