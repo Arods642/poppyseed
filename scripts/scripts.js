@@ -1,9 +1,9 @@
 $(function() {
-    
-    $( document ).ready(function() {
-        // Set the tax rate variable for later use.
-        let tax_rate;
+    const tax_rate = 0;
+    const subtotal = 0;
+    const total = 0;
 
+    $( document ).ready(function() {
         fetchLocationBasedData();
 
         // call to cart end point. I had to use a proxy to get to the endpoint
@@ -58,8 +58,6 @@ $(function() {
         
         event.preventDefault();
 
-        
-
         $.ajax({
             url: 'process.json',
             dataType: 'json',
@@ -75,22 +73,31 @@ $(function() {
         });
     });
 
-    // call to location end point. I had to use a proxy to get to the endpoint. 
+    genericErrorHandler = errorMsg => console.log(errorMsg);
+
+    /**API Calls
+     * Had to use a proxy to access endpoints ()
+     * https://cors-anywhere.herokuapp.com/
+     */
+    const API_URL = 'https://cors-anywhere.herokuapp.com/https://poppyseed.yokepayments.com';
+    const HEADERS = {
+        "CLIENT-TYPE": "POPPYSEED",
+        "CLIENT-VERSION": "1.0.0",
+        "ACCEPT": "application/json"
+        };
+
     function fetchLocationBasedData() {
         $.ajax({
-            url: "https://cors-anywhere.herokuapp.com/https://poppyseed.yokepayments.com/location",
+            url: `${API_URL}/location`,
             type: 'GET',
-            headers: {
-                    "CLIENT-TYPE": "POPPYSEED",
-                    "CLIENT-VERSION": "1.0.0",
-                    "ACCEPT": "application/json"
-                    },
+            headers: HEADERS,
             dataType: 'json',
-            success: handleFetchLocationBasedData
+            success: handleOnSuccessFetchLocationBasedData,
+            error: handleOnErrorFetchLocationBasedData
         });
     }
 
-    function handleFetchLocationBasedData(res) {
+    function handleOnSuccessFetchLocationBasedData(res) {
         // setting up the div tag to be appended.
         const div = document.getElementById('location');
 
@@ -160,6 +167,11 @@ $(function() {
                 <label class="custom-control-label" for="save-info">Save this information for next time</label>\
             </div>\
         '; 
+    }
+
+    function handleOnErrorFetchLocationBasedData(err) {
+        const msg = 'There was an error fetching locations!';
+        genericErrorHandler(msg);
     }
 
 });
